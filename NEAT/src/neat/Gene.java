@@ -68,7 +68,7 @@ class Gene implements Comparable<Gene> {
 	public void changeWeight(Genome g) {
 		Random rand = og.rand;
 		float weight = weightMap.get(g).floatValue();
-		weight = weight + rand.nextFloat() * 2 - 1f;
+		weight = weight + rand.nextFloat() * 4 - 2f;
 		weightMap.replace(g, weight);
 	}
 
@@ -98,7 +98,7 @@ class Gene implements Comparable<Gene> {
 	 */
 	public void addGenome(Genome g) {
 		Random rand = og.rand;
-		float weight = rand.nextFloat() * 2 - 1;
+		float weight = rand.nextFloat() * 4 - 2;
 		weightMap.put(g, weight);
 		this.enable(g);
 	}
