@@ -1,19 +1,35 @@
+package neat;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * An XOR with 2 inputs and 1 output
+ */
 public class XOR implements FitnessFunction {
+
 	OverGen og;
 
 	public XOR() {
 		og = new OverGen(2, 1, this);
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see FitnessFunction#getOG()
+	 */
 	@Override
 	public OverGen getOG() {
 		return og;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see FitnessFunction#calculateFitness(Genome)
+	 */
 	@Override
 	public void calculateFitness(Genome gnm) {
 
@@ -34,8 +50,13 @@ public class XOR implements FitnessFunction {
 		gnm.fitness = (4f - d) * (4f - d);
 
 	}
-	
-	public Genome run(int popSize, int maxLoops){
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see FitnessFunction#run(int, int)
+	 */
+	public Genome run(int popSize, int maxLoops) {
 		og.createBasePop(popSize);
 		List<Genome> top = new ArrayList<Genome>(og.topFit);
 		GenomeFitnessComparatorDesc gfc = new GenomeFitnessComparatorDesc();
@@ -45,10 +66,10 @@ public class XOR implements FitnessFunction {
 			og.populateGen();
 			top.addAll(og.topFit);
 			Collections.sort(top, gfc);
-			if(top.get(0).fitness > 9f && genBT == 0){
+			if (top.get(0).fitness > 9f && genBT == 0) {
 				genBT = og.gen;
 			}
-			if (og.gen >= maxLoops){
+			if (og.gen >= maxLoops) {
 				return null;
 			}
 		}

@@ -1,3 +1,4 @@
+package neat;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -13,30 +14,78 @@ import java.util.TreeSet;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 
+/**
+ * This class contains populations of genomes and manipulates/evolves them
+ * toward a higherfitness
+ */
 public class OverGen {
-	// List<Gene> genList = new ArrayList<Gene>();
+
+	/** MultiMap of all Genes indexed by output node */
 	Multimap<Node, Gene> geneMap = HashMultimap.create();
+
+	/** Map of all species atchetypes indexed by species id */
 	Map<Integer, Genome> archetypeMap = new HashMap<Integer, Genome>();
+
+	/** Species fitness map */
 	List<Multimap<Integer, Float>> sfMap = new ArrayList<Multimap<Integer, Float>>();
+
+	/** Species map. */
 	List<Multimap<Integer, Genome>> speciesMap = new ArrayList<Multimap<Integer, Genome>>();
+
+	/** List of input nodes */
 	List<Node> inList = new ArrayList<Node>();
+
+	/** List of output nodes */
 	List<Node> outList = new ArrayList<Node>();
-	List<Node> hiddenList = new ArrayList<Node>();
-	List<Node> nodList = new ArrayList<Node>();
+
+	/** The nod list. */
+	// List<Node> nodList = new ArrayList<Node>();
+
+	/** The genome list. */
 	List<Genome> genomeList = new ArrayList<Genome>();
+
+	/** List of all Genomes by Generation */
 	List<List<Genome>> generation = new ArrayList<List<Genome>>();
+
+	/** The top fit. */
 	Set<Genome> topFit = new TreeSet<Genome>();
+
+	/** The shared top fit. */
 	Set<Genome> sharedTopFit = new TreeSet<Genome>();
+
 	FitnessFunction fitFunc;
+
 	Long lastTime = System.currentTimeMillis();
+
+	/** Random Variable */
 	Random rand;
+
+	/** The seed. */
 	long seed;
+
+	/** The current generation */
 	int gen = 0;
+
 	int popSize = 0;
+
 	int topSize = 0;
+
+	/** The base genome */
 	Genome base;
+
+	/** The bias node */
 	Node bias;
 
+	/**
+	 * Instantiates a new over gen.
+	 *
+	 * @param numIn
+	 *            the number of network inputs
+	 * @param numOut
+	 *            the number of network outputs
+	 * @param f
+	 *            the fitness function
+	 */
 	public OverGen(int numIn, int numOut, FitnessFunction f) {
 		seed = System.currentTimeMillis();
 		rand = new Random(seed);
@@ -46,18 +95,12 @@ public class OverGen {
 		for (int i = 0; i < numIn; ++i) {
 			Node nod = new Node(0);
 			inList.add(nod);
-			nodList.add(nod);
 		}
 		for (int i = 0; i < numOut; ++i) {
 			Node nod = new Node(1);
 			outList.add(nod);
-			nodList.add(nod);
 
 		}
-		nodList = new ArrayList<Node>(inList);
-		nodList.addAll(outList);
-		nodList.add(bias);
-
 		for (int i = 0; i < outList.size(); ++i) {
 			Node nod = outList.get(i);
 			for (int j = -1; j < inList.size(); ++j) {
@@ -67,15 +110,32 @@ public class OverGen {
 
 	}
 
+	/**
+	 * Sets the seed for the Random.
+	 *
+	 * @param seed
+	 *            the new seed
+	 */
 	public void setSeed(long seed) {
 		rand.setSeed(seed);
 		this.seed = seed;
 	}
 
+	/**
+	 * Gets the seed.
+	 *
+	 * @return the seed
+	 */
 	public long getSeed() {
 		return seed;
 	}
 
+	/**
+	 * Creates the base population.
+	 *
+	 * @param pSize
+	 *            the population size for all generations
+	 */
 	public void createBasePop(int pSize) {
 		popSize = pSize;
 		topSize = popSize / 10;
@@ -95,6 +155,10 @@ public class OverGen {
 		speciate();
 	}
 
+	/**
+	 * Calculates the fitness for each member of the population. Then finds the
+	 * most fit Genomes and puts them in the topFit and sharedTopFit Sets
+	 */
 	public void popFitness() {
 		for (Genome g : generation.get(gen)) {
 
@@ -132,9 +196,8 @@ public class OverGen {
 			}
 		}
 		for (Genome g : sharedTopFit) {
-			System.out.println("   \t #" + (i) + " Shared Fitness:\t" + 
-						g.sharedFitness + "  (" + g.fitness + ")");
-			//g.printGenome();
+			System.out.println("   \t #" + (i) + " Shared Fitness:\t" + g.sharedFitness + "  (" + g.fitness + ")");
+			// g.printGenome();
 			if (++i >= 2) {
 				break;
 			}
@@ -142,17 +205,26 @@ public class OverGen {
 		System.out.println("_______________________________\n");
 	}
 
+	/**
+	 * Checks if two genomes are of the same species.
+	 *
+	 * @param g1
+	 *            the g 1
+	 * @param g2
+	 *            the g 2
+	 * @return true, if the genomes share species
+	 */
 	public boolean compatable(Genome g1, Genome g2) {
-		float dThresh = 0.3f;
-		float c1 = 0.3f;
-		float c2 = 0.3f;
-		float c3 = 0.3f;
+		float distThresh = 0.3f;
+		float c1 = 0.3f; // Weights the excess (e)
+		float c2 = 0.3f; // Weights the disjoint (d)
+		float c3 = 0.3f; // Weights the weight difference (w)
 		Set<Gene> s1 = new TreeSet<Gene>(g1.genome.values());
 		Set<Gene> s2 = new TreeSet<Gene>(g2.genome.values());
 		int e = 0;
 		int d = 0;
 		float w = 0f;
-
+		int N = (s1.size() > s2.size() ? s1.size() : s2.size());
 		Gene max1 = Collections.max(g1.genome.values());
 		Gene max2 = Collections.max(g2.genome.values());
 
@@ -176,12 +248,14 @@ public class OverGen {
 		}
 		w /= s.size();
 
-		int N = (s1.size() > s2.size() ? s1.size() : s2.size());
 		float distance = (c1 * e + c2 * d) / N + c3 * w;
 
-		return distance < dThresh;
+		return distance < distThresh;
 	}
 
+	/**
+	 * Populate the next generation
+	 */
 	public void populateGen() {
 
 		Map<Integer, Float> sumMap = new TreeMap<Integer, Float>();
@@ -267,6 +341,9 @@ public class OverGen {
 
 	}
 
+	/**
+	 * Define the different species.
+	 */
 	public void speciate() {
 		Multimap<Integer, Genome> thisGen = HashMultimap.create();
 		if (gen == 0) {
@@ -288,29 +365,34 @@ public class OverGen {
 				thisGen.put(spNum, g);
 			}
 		}
-		/*
-		 * for (int i : archetypeMap.keySet()) { if (thisGen.containsKey(i)) {
-		 * List<Genome> thisSp = new ArrayList<Genome>(thisGen.get(i));
-		 * Collections.sort(thisSp); archetypeMap.replace(i, thisSp.get(0)); } }
-		 */
 
 		speciesMap.add(thisGen);
 		popFitness();
 
-		// System.out.println("_______________________________");
-		/*for (int i : thisGen.keySet()) {
-			List<Genome> gL = new ArrayList<Genome>(thisGen.get(i));
-			Collections.sort(gL);
-			System.out.println("Species: " + i + "\tSize: " + thisGen.get(i).size() + " \tTop Shared Fitness: "
-					+ gL.get(0).sharedFitness);
-
-		}*/
+		/*
+		 * for (int i : thisGen.keySet()) { List<Genome> gL = new
+		 * ArrayList<Genome>(thisGen.get(i)); Collections.sort(gL);
+		 * System.out.println("Species: " + i + "\tSize: " +
+		 * thisGen.get(i).size() + " \tTop Shared Fitness: " +
+		 * gL.get(0).sharedFitness);
+		 * 
+		 * }
+		 */
 		System.out.println("\nNodeNum: " + Node.count + "\tSpecies: " + thisGen.keySet().size() + "\tGenes/Node: "
 				+ (float) Gene.count / Node.count + "\t Time Since Last: "
 				+ (System.currentTimeMillis() - lastTime) / 1000f);
 		lastTime = System.currentTimeMillis();
 	}
 
+	/**
+	 * Returns a Genome that is the 'Child' of the two input Genomes
+	 *
+	 * @param g1
+	 *            parent 1
+	 * @param g2
+	 *            parent 2
+	 * @return the child
+	 */
 	private Genome mate(Genome g1, Genome g2) {
 		if (g1 == g2) {
 			return new Genome(g1);
@@ -318,15 +400,12 @@ public class OverGen {
 		return new Genome(g1, g2);
 	}
 
-	public void updateNodeList() {
-		for (int i = 0; i < hiddenList.size(); ++i) {
-			if (!nodList.contains(hiddenList.get(i))) {
-				nodList.add(hiddenList.get(i));
-			}
-		}
-		Collections.sort(nodList);
-	}
-
+	/**
+	 * Adds the gene g to this Genome.
+	 *
+	 * @param g
+	 *            the g
+	 */
 	public void addGene(Gene g) {
 		geneMap.put(g.out, g);
 	}
@@ -336,7 +415,7 @@ class GenomeFitnessComparatorDesc implements Comparator<Genome> {
 
 	@Override
 	public int compare(Genome o1, Genome o2) {
-		// TODO Auto-generated method stub
+		// Compare Lexographically by fitness(desc) then id(asc)
 		Float f1 = o1.fitness;
 		Float f2 = o2.fitness;
 		Integer id1 = o1.id;

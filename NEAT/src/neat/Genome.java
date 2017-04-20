@@ -1,3 +1,4 @@
+package neat;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -10,25 +11,45 @@ import java.util.TreeSet;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 
+/**
+ * This class contains teh netwrok of Nodes (vertices) and Genes (edges)
+ */
 class Genome implements Comparable<Genome> {
 
 	static OverGen og;
 
+	/** Map containing all genes in Genome indexed by input Node */
 	HashMultimap<Node, Gene> genIn = HashMultimap.create();
+
+	/** Map containing all genes in Genome indexed by output Node */
 	HashMultimap<Node, Gene> genome = HashMultimap.create();
 
 	float fitness;
+
 	float sharedFitness;
-	int speciesSize;
 
 	int id;
+
 	private static int count = 0;
 
+	/**
+	 * Instantiates a new genome. Sets the OverGen for all later Genomes Use
+	 * this Contructor for the base Genome
+	 *
+	 * @param o
+	 *            the OverGen
+	 */
 	public Genome(OverGen o) {
 		og = o;
 		id = count++;
 	}
 
+	/**
+	 * Instantiates a new genome. Copies the Genes from another Genome
+	 *
+	 * @param g
+	 *            the Genome
+	 */
 	public Genome(Genome g) {
 		id = count++;
 		for (Gene gen : g.genome.values()) {
@@ -38,6 +59,14 @@ class Genome implements Comparable<Genome> {
 		}
 	}
 
+	/**
+	 * Instantiates a new genome. Creates a Genome from 2 parents
+	 *
+	 * @param g1
+	 *            Parent 1
+	 * @param g2
+	 *            Parent 2
+	 */
 	public Genome(Genome g1, Genome g2) {
 		id = count++;
 		Genome max = (g1.genome.values().size() > g2.genome.values().size() ? g1 : g2);
@@ -63,14 +92,16 @@ class Genome implements Comparable<Genome> {
 		}
 	}
 
+	/**
+	 * Mutate. Randomly changes the network by adding a node, adding a
+	 * connection and changing weights
+	 */
 	public void mutate() {
 		Random rand = og.rand;
 		int r = rand.nextInt(1000);
 		if (r < 5) {
 			addNode();
-			// System.out.println("Adding Node");
 		} else if (r < 400) {
-			// System.out.println("Adding Connection");
 			if (!addConnection()) {
 				changeWeight();
 			}
@@ -79,17 +110,19 @@ class Genome implements Comparable<Genome> {
 
 		} else {
 			changeAllWeights();
-			// System.out.println("Changing all weights");
 		}
 	}
 
+	/**
+	 * Adds a node to the network. Each new Node disables a Gene
+	 */
 	public void addNode() {
 		// Inserts a Node in the middle of a Gene
 
 		// Node cannot be inserted into a disabled gene or a bias gene
 		List<Gene> genList = new ArrayList<Gene>();
 		for (Gene g : genome.values()) {
-			if (!g.in.bias && g.getEnabled(this)) {
+			if (!g.in.bias && g.getState(this)) {
 				// Create a list of viable genes to be disabled
 				genList.add(g);
 			}
@@ -122,28 +155,44 @@ class Genome implements Comparable<Genome> {
 
 	}
 
+	/**
+	 * Change all weights.
+	 */
 	public void changeAllWeights() {
 		for (Gene g : genome.values()) {
 			g.changeWeight(this);
 		}
 	}
 
+	/**
+	 * Change a random weight.
+	 */
 	public void changeWeight() {
 		List<Gene> genList = new ArrayList<Gene>(genome.values());
 		Random rand = og.rand;
 		int r = rand.nextInt(genList.size());
-		while (!genList.get(r).getEnabled(this)) {
+		while (!genList.get(r).getState(this)) {
 			r = rand.nextInt(genList.size());
 		}
 		genList.get(r).changeWeight(this);
 	}
 
+	/**
+	 * Adds the gene between in and out. Create the Gene if it doesn't exist;
+	 * Add it from the OverGen if isn't in the Genome Enable it if the Genome
+	 * contains the disbaled Genome
+	 *
+	 * @param in
+	 *            the input Node
+	 * @param out
+	 *            the output Node
+	 */
 	public void addGene(Node in, Node out) {
 		if (og.geneMap.values().size() > 0) {
 			if (!genome.values().isEmpty()) {
 				for (Gene g : genome.get(out)) {
 					if (g.in == in) {
-						if (g.getEnabled(this)) {
+						if (g.getState(this)) {
 							return;
 						} else {
 							g.enable(this);
@@ -167,6 +216,11 @@ class Genome implements Comparable<Genome> {
 		genIn.put(in, gen);
 	}
 
+	/**
+	 * Adds the connection between two random valid nodes *
+	 * 
+	 * @return true, if successful
+	 */
 	public boolean addConnection() {
 		List<Node> inList = new ArrayList<Node>();
 		List<Node> outList = new ArrayList<Node>();
@@ -184,7 +238,7 @@ class Genome implements Comparable<Genome> {
 					throw new IllegalStateException();
 				} else {
 					for (Gene g : s) {
-						if (!g.getEnabled(this) && loopCheck(in, out)) {
+						if (!g.getState(this) && loopCheck(in, out)) {
 							inList.add(in);
 							outList.add(out);
 						}
@@ -205,9 +259,18 @@ class Genome implements Comparable<Genome> {
 
 	}
 
+	/**
+	 * This function checks whether the proposed connection loops In other
+	 * words, checks if the output would affect the input
+	 * 
+	 * @param in
+	 *            the in
+	 * @param out
+	 *            the out
+	 * @return true, if successful
+	 */
 	public boolean loopCheck(Node in, Node out) {
-		// This function checks whether the proposed connection loops
-		// In other words, checks if the output would affect the input
+
 		if (in == out) {
 			return false;
 		}
@@ -224,6 +287,9 @@ class Genome implements Comparable<Genome> {
 		return b;
 	}
 
+	/**
+	 * Prints the genome.
+	 */
 	public void printGenome() {
 		Set<Node> out = new TreeSet<Node>(genome.keySet());
 		Set<Node> in = new TreeSet<Node>(genIn.keySet());
@@ -241,7 +307,7 @@ class Genome implements Comparable<Genome> {
 			System.out.print(i.id + "\t");
 			List<Node> nodList = new ArrayList<Node>();
 			for (Gene g : genList) {
-				if (g.getEnabled(this)) {
+				if (g.getState(this)) {
 					nodList.add(g.out);
 				}
 			}
@@ -252,6 +318,9 @@ class Genome implements Comparable<Genome> {
 		}
 	}
 
+	/**
+	 * Prints the Genome weights.
+	 */
 	public void printFloat() {
 		Set<Node> out = new TreeSet<Node>(genome.keySet());
 		Set<Node> in = new TreeSet<Node>(genIn.keySet());
@@ -271,7 +340,7 @@ class Genome implements Comparable<Genome> {
 				s.retainAll(genome.get(o));
 				if (!s.isEmpty()) {
 					for (Gene g : s) {
-						if (g.getEnabled(this)) {
+						if (g.getState(this)) {
 							System.out.printf("%+.2f\t", g.weightMap.get(this));
 						} else {
 							System.out.print("+O.OO\t");
@@ -297,6 +366,13 @@ class Genome implements Comparable<Genome> {
 		return null;
 	}
 
+	/**
+	 * Calculate the output of the Genome.
+	 *
+	 * @param inList
+	 *            the list of inputs
+	 * @return the list of outputs
+	 */
 	public List<Float> calculate(List<Float> inList) {
 		if (inList.size() != og.inList.size()) {
 			throw new IllegalArgumentException();
@@ -313,11 +389,14 @@ class Genome implements Comparable<Genome> {
 		}
 		List<Float> retList = new ArrayList<Float>();
 		for (Node n : og.outList) {
-			retList.add(n.calculateNode(this, genome.keySet().size() * 2));
+			retList.add(n.calculateNode(this));
 		}
 		return retList;
 	}
 
+	/**
+	 * Calculate fitness of this Genome.
+	 */
 	public void calculateFitness() {
 		og.fitFunc.calculateFitness(this);
 		/*
@@ -330,9 +409,11 @@ class Genome implements Comparable<Genome> {
 		 * fitness = (4f - d) * (4f - d);
 		 */
 
-
 	}
 
+	/**
+	 * Calculate shared fitness of this Genome.
+	 */
 	public void calculateSharedFitness() {
 
 		while (og.sfMap.size() <= og.gen) {
@@ -350,6 +431,11 @@ class Genome implements Comparable<Genome> {
 		}
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.lang.Comparable#compareTo(java.lang.Object)
+	 */
 	@Override
 	public int compareTo(Genome arg0) {
 		// Compare Genomes by shared fitness descending;
