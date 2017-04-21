@@ -6,8 +6,10 @@ package neat;
  */
 public interface FitnessFunction {
 
-	public OverGen getOG();
-
+	public int numInputs();
+	
+	public int numOutputs();
+	
 	/**
 	 * Calculates the fitness of the input Genome.
 	 *
@@ -15,16 +17,5 @@ public interface FitnessFunction {
 	 *            the gnm
 	 */
 	public void calculateFitness(Genome gnm);
-
-	/**
-	 * Begin evolving the network
-	 *
-	 * @param popSize
-	 *            the population size
-	 * @param maxLoops
-	 *            the max number of loops
-	 * @return the winning genome
-	 */
-	public Genome run(int popSize, int maxLoops);
 
 }

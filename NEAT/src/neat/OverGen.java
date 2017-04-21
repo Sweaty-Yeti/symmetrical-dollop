@@ -16,7 +16,7 @@ import com.google.common.collect.Multimap;
 
 /**
  * This class contains populations of genomes and manipulates/evolves them
- * toward a higherfitness
+ * toward a higher fitness
  */
 public class OverGen {
 
@@ -79,24 +79,20 @@ public class OverGen {
 	/**
 	 * Instantiates a new over gen.
 	 *
-	 * @param numIn
-	 *            the number of network inputs
-	 * @param numOut
-	 *            the number of network outputs
 	 * @param f
 	 *            the fitness function
 	 */
-	public OverGen(int numIn, int numOut, FitnessFunction f) {
+	public OverGen(FitnessFunction f) {
 		seed = System.currentTimeMillis();
 		rand = new Random(seed);
 		fitFunc = f;
 		bias = new Node(this);
 		base = new Genome(this);
-		for (int i = 0; i < numIn; ++i) {
+		for (int i = 0; i < f.numInputs(); ++i) {
 			Node nod = new Node(0);
 			inList.add(nod);
 		}
-		for (int i = 0; i < numOut; ++i) {
+		for (int i = 0; i < f.numOutputs(); ++i) {
 			Node nod = new Node(1);
 			outList.add(nod);
 
@@ -256,7 +252,7 @@ public class OverGen {
 	/**
 	 * Populate the next generation
 	 */
-	public void populateGen() {
+	public void populateGeneration() {
 
 		Map<Integer, Float> sumMap = new TreeMap<Integer, Float>();
 		float totalSum = 0f;

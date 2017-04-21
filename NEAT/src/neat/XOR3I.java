@@ -1,36 +1,24 @@
 package neat;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 /**
  * An XOR with 3 inputs, and 1 output
  */
 public class XOR3I implements FitnessFunction{
-	
-	/** The og. */
-	OverGen og;
 
-
-	public XOR3I() {
-		og = new OverGen(3, 1, this);
-	}
-
-	/* (non-Javadoc)
-	 * @see FitnessFunction#getOG()
-	 */
 	@Override
-	public OverGen getOG() {
-		return og;
+	public int numInputs() {
+		return 3;
 	}
 
-	/* (non-Javadoc)
-	 * @see FitnessFunction#calculateFitness(Genome)
-	 */
+	@Override
+	public int numOutputs() {
+		return 1;
+	}
+
 	@Override
 	public void calculateFitness(Genome gnm) {
-
-		
 		List<Float> inList = new ArrayList<Float>();
 		inList.add(1f);
 		inList.add(1f);
@@ -66,32 +54,6 @@ public class XOR3I implements FitnessFunction{
 		float d8 = 1f - gnm.calculate(inList).get(0);
 		float d = d1 + d2 + d3 + d4 + d5 + d6 + d7 + d8;
 		gnm.fitness = (8f - d) * (8f - d);
+	}
 
-	}
-	
-	/* (non-Javadoc)
-	 * @see FitnessFunction#run(int, int)
-	 */
-	public Genome run(int popSize, int maxLoops){
-		og.createBasePop(popSize);
-		List<Genome> top = new ArrayList<Genome>(og.topFit);
-		GenomeFitnessComparatorDesc gfc = new GenomeFitnessComparatorDesc();
-		Collections.sort(top, gfc);
-		int genBT = 0;
-		while (top.get(0).fitness < 63f) {
-			og.populateGen();
-			top.addAll(og.topFit);
-			Collections.sort(top, gfc);
-			if(top.get(0).fitness > 49f && genBT == 0){
-				genBT = og.gen;
-			}
-			if (og.gen >= maxLoops){
-				return null;
-			}
-		}
-		System.out.println("Winning Fitness: " + top.get(0).fitness);
-		System.out.print("BreakThrough Generation: " + genBT);
-		System.out.print("\tFinal Generation: " + og.gen);
-		return top.get(0);
-	}
 }
