@@ -15,8 +15,11 @@ public class NEAT {
 		FitnessFunction xor = new XOR();
 		//Three input XOR
 		//FitnessFunction xor = new XOR3I();
+		//sum of 3 [1 bit]-inputs
+		//FitnessFunction xor = new ADD3I2O();
 		
-		Genome gnm = xor.run(300, 500);
+		
+		Genome gnm = xor.run(100, 500);
 		if(gnm != null){
 			gnm.printFloat();
 		}

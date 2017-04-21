@@ -14,13 +14,11 @@ public class ADD3I2O implements FitnessFunction {
 
 	@Override
 	public OverGen getOG() {
-		// TODO Auto-generated method stub
 		return og;
 	}
 
 	@Override
 	public void calculateFitness(Genome gnm) {
-		// TODO Auto-generated method stub
 		List<Float> inList = new ArrayList<Float>();
 		inList.add(1f);
 		inList.add(1f);
