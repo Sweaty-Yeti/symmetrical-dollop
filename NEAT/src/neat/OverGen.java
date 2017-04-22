@@ -211,7 +211,7 @@ public class OverGen {
 	 * @return true, if the genomes share species
 	 */
 	public boolean compatable(Genome g1, Genome g2) {
-		float distThresh = 0.3f;
+		float distThresh = 0.4f;
 		float c1 = 0.3f; // Weights the excess (e)
 		float c2 = 0.3f; // Weights the disjoint (d)
 		float c3 = 0.3f; // Weights the weight difference (w)
